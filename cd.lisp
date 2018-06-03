@@ -37,3 +37,25 @@
   (with-open-file (in filename)
     (with-standard-io-syntax
       (setf *db* (read in)))))
+
+(defun where (&key title artist rating (ripped nil ripped-p))
+  #'(lambda (cd)
+      (and
+       (if title (equal (getf cd :title) title) t)
+       (if artist (equal (getf cd :artist) artist) t)
+       (if rating (equal (getf cd :rating) rating) t)
+       (if ripped-p (equal (getf cd :ripped) ripped) t))))
+
+(defun select (selector)
+  (remove-if-not selector *db*))
+
+(defun update (selector &key title artist rating (ripped nil ripped-p))
+  (setf *db*
+        (mapcar
+         #'(lambda(cd)
+             (when (funcall selector cd)
+               (if title (setf (getf cd :title) title))
+               (if artist (setf (getf cd :artist) artist))
+               (if rating (setf (getf cd :rating) rating))
+               (if ripped (setf (getf cd :ripped) ripped)))
+             cd) *db*)))
